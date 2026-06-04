@@ -1,0 +1,43 @@
+# Data files (large, download separately)
+data/*.npz
+data/*.csv
+data/*.arff
+
+# Results cache (regenerate by running notebooks)
+results/*.json
+results/*.npz
+
+# Figures (regenerate by running notebooks)
+figures/*.pdf
+figures/*.png
+figures/*.svg
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Conda / virtualenv
+.env
+.venv
+env/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

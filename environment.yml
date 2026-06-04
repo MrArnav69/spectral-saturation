@@ -1,0 +1,16 @@
+name: spectral-saturation
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.13
+  - pip
+  - pip:
+      - numpy==2.4.6
+      - scikit-learn==1.9.0
+      - scipy==1.17.1
+      - matplotlib==3.10.9
+      - pandas==3.0.3
+      - jupyter
+      - ipykernel
+      - tensorflow==2.21.0   # only needed for CIFAR-10 loading

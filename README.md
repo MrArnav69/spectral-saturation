@@ -58,38 +58,57 @@ spectral-saturation/
 
 ### Prerequisites
 
-Create and activate the environment using Anaconda/Miniconda:
+Create and activate the conda environment using the provided environment file:
 
 ```bash
-# Create the environment
+# Create the environment from environment.yml
 conda env create -f environment.yml
 
 # Activate the environment
 conda activate spectral-saturation
 ```
 
+Register the Conda environment's Python kernel with Jupyter so that notebooks run under the correct dependencies:
+
+```bash
+python -m ipykernel install --user --name spectral-saturation --display-name "Python (spectral-saturation)"
+```
+
 ---
 
-## Reproducing Results
+## Running the Project & Reproducing Results
 
-We provide two pathways to reproduce the figures and statistical tests in the paper.
+We provide two pathways to reproduce the figures, statistical tests, and ablations in the paper.
 
 ### Pathway 1: Command Line Execution (Run All)
 
-To run all experiments, statistical tests, and generate all figures in one command:
+To run the entire pipeline (sweeps, statistical tests, ablations, and figures generation) from the command line:
 
 ```bash
 python run_all.py
 ```
 
-This will run all sweeps, perform the ablations, populate the `results/` folder with JSON files, and save the publication figures in the `figures/` directory.
+- **Automatic Downloading**: If the dataset `.npz` files are missing from the `data/` folder, the pipeline will automatically download them from OpenML and scikit-learn on-the-fly and cache them.
+- **Smart Caching**: The script will check if results are already computed and cached in `results/`. If found, it loads the cached outputs to generate figures instantly.
+- **Force Re-run**: To run all computations from scratch, delete the cached results in the `results/` folder:
+  ```bash
+  rm results/*.json
+  python run_all.py
+  ```
 
 ### Pathway 2: Interactive Jupyter Notebooks
 
-Alternatively, you can open and run the numbered notebooks sequentially:
+You can open and run the numbered notebooks sequentially inside Jupyter Lab or Jupyter Notebook:
 
-1. **`notebooks/01_experiments.ipynb`**: Run sweeps across all 6 datasets, tracking classification accuracy and effective rank.
-2. **`notebooks/02_statistics.ipynb`**: Perform the Wilcoxon signed-rank test for oversampling harm, Spearman correlation for $S(K)$, and Pearson correlation for the decoupling hypothesis.
-3. **`notebooks/03_ablations.ipynb`**: Perform PCA target dimensionality and inverse regularization $C$ ablations.
+```bash
+# Start the Jupyter server
+jupyter notebook
+```
 
-All notebooks are designed to use cached results from `results/` to run instantly. If the cache is deleted, they will re-run the experiments automatically.
+Navigate to the `notebooks/` directory and open the notebooks in order:
+1. **[`notebooks/01_experiments.ipynb`](file:///Users/mrarnav69/Documents/spectral-saturation/notebooks/01_experiments.ipynb)**: Runs K-sweep sweeps across all 6 datasets, tracking classification accuracy and effective rank. Saves standard sweeps to `results/all_results.json`.
+2. **[`notebooks/02_statistics.ipynb`](file:///Users/mrarnav69/Documents/spectral-saturation/notebooks/02_statistics.ipynb)**: Performs the Wilcoxon signed-rank test for oversampling harm, Spearman correlation for $S(K)$, and Pearson correlation for the decoupling hypothesis.
+3. **[`notebooks/03_ablations.ipynb`](file:///Users/mrarnav69/Documents/spectral-saturation/notebooks/03_ablations.ipynb)**: Performs PCA target dimensionality and inverse regularization $C$ parameter ablations.
+
+*Note: All notebooks are designed to use cached results from `results/` to render figures and analysis instantly. If you delete the cache, the notebooks will automatically re-run the experiments.*
+

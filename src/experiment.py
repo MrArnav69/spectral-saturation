@@ -2,14 +2,16 @@ import os
 import json
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import NearestCentroid
+from sklearn.svm import LinearSVC
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from src.metrics import calculate_effective_rank, saturation_ratio
 
-def sample_and_evaluate(X, y, K, test_size=200, seed=None, C=np.inf):
+def sample_and_evaluate(X, y, K, test_size=200, seed=None, C=np.inf, classifier='logistic'):
     """
     Sample K examples per class for training, test_size for testing.
-    Train logistic regression, return accuracy and effective rank.
+    Train linear classifier, return accuracy and effective rank.
     """
     rng = np.random.default_rng(seed)
     
@@ -40,7 +42,16 @@ def sample_and_evaluate(X, y, K, test_size=200, seed=None, C=np.inf):
     X_test_centered = X_test - X_train_mean
     
     # Train
-    clf = LogisticRegression(max_iter=5000, C=C)
+    if classifier == 'logistic':
+        clf = LogisticRegression(max_iter=5000, C=C)
+    elif classifier == 'nearest_centroid':
+        clf = NearestCentroid()
+    elif classifier == 'svm':
+        svc_c = 1e6 if C == np.inf else C
+        clf = LinearSVC(C=svc_c, max_iter=10000, dual='auto')
+    else:
+        raise ValueError(f"Unknown classifier: {classifier}")
+        
     clf.fit(X_train_centered, y_train)
     acc = clf.score(X_test_centered, y_test)
     
@@ -54,7 +65,7 @@ def sample_and_evaluate(X, y, K, test_size=200, seed=None, C=np.inf):
     
     return acc, erank
 
-def run_experiment(name, X, y, class_a, class_b, Ks, test_size, n_trials=50, pca_dims=50, C=np.inf):
+def run_experiment(name, X, y, class_a, class_b, Ks, test_size, n_trials=50, pca_dims=50, C=np.inf, classifier='logistic'):
     """
     Run full K-sweep for one dataset and one class pair.
     Returns list of dicts with K, mean_acc, std_acc, mean_erank, S.
@@ -89,7 +100,7 @@ def run_experiment(name, X, y, class_a, class_b, Ks, test_size, n_trials=50, pca
             
         accs, eranks = [], []
         for trial in range(n_trials):
-            acc, erank = sample_and_evaluate(X_pair, y_pair, K=K, test_size=test_size, seed=trial, C=C)
+            acc, erank = sample_and_evaluate(X_pair, y_pair, K=K, test_size=test_size, seed=trial, C=C, classifier=classifier)
             accs.append(acc)
             eranks.append(erank)
         

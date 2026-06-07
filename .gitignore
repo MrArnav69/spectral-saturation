@@ -1,3 +1,7 @@
+# Paper draft (not for distribution)
+Spectral Saturation*.pdf
+*.pdf
+
 # Data files (large, download separately)
 data/*.npz
 data/*.csv

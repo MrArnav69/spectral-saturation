@@ -2,7 +2,6 @@ import os
 import numpy as np
 
 def download_and_cache_dataset(data_dir, filename):
-    """Download a dataset from the internet and cache it as an .npz file."""
     path = os.path.join(data_dir, filename)
     os.makedirs(data_dir, exist_ok=True)
     
@@ -38,7 +37,6 @@ def download_and_cache_dataset(data_dir, filename):
     print(f"Dataset {filename} successfully downloaded and cached at '{path}'.")
 
 def load_npz_dataset(data_dir, filename, normalize=True):
-    """Load a dataset from an .npz file, downloading it if not present."""
     path = os.path.join(data_dir, filename)
     if not os.path.exists(path):
         download_and_cache_dataset(data_dir, filename)
@@ -66,7 +64,6 @@ def load_breast_cancer(data_dir='data'):
     return load_npz_dataset(data_dir, 'breast_cancer.npz', normalize=False)
 
 def load_cifar10():
-    """Load CIFAR-10 using tensorflow.keras.datasets."""
     try:
         from tensorflow.keras.datasets import cifar10
         (X_cifar, y_cifar), (_, _) = cifar10.load_data()
@@ -74,12 +71,10 @@ def load_cifar10():
         y_cifar = y_cifar.flatten()
         return X_cifar, y_cifar
     except ImportError:
-        # Fallback if tensorflow is not installed or import fails
         print("Tensorflow not installed. Cannot load CIFAR-10.")
         return None, None
 
 def load_all_datasets(data_dir='data'):
-    """Load all standard npz datasets and return in a dictionary."""
     datasets = {}
     print("Loading MNIST...")
     datasets['MNIST'] = load_mnist(data_dir)

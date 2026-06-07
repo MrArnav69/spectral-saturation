@@ -9,16 +9,11 @@ from sklearn.preprocessing import StandardScaler
 from src.metrics import calculate_effective_rank, saturation_ratio
 
 def sample_and_evaluate(X, y, K, test_size=200, seed=None, C=np.inf, classifier='logistic'):
-    """
-    Sample K examples per class for training, test_size for testing.
-    Train linear classifier, return accuracy and effective rank.
-    """
     rng = np.random.default_rng(seed)
     
     idx_0 = np.where(y == 0)[0]
     idx_1 = np.where(y == 1)[0]
     
-    # Safety check
     if K > len(idx_0) - test_size or K > len(idx_1) - test_size:
         raise ValueError(f"K={K} too large for available data")
     
@@ -36,12 +31,10 @@ def sample_and_evaluate(X, y, K, test_size=200, seed=None, C=np.inf, classifier=
     X_test = np.vstack([X[test_0], X[test_1]])
     y_test = np.array([0]*test_size + [1]*test_size)
     
-    # Center training data
     X_train_mean = X_train.mean(axis=0)
     X_train_centered = X_train - X_train_mean
     X_test_centered = X_test - X_train_mean
     
-    # Train
     if classifier == 'logistic':
         clf = LogisticRegression(max_iter=5000, C=C)
     elif classifier == 'nearest_centroid':
@@ -55,28 +48,20 @@ def sample_and_evaluate(X, y, K, test_size=200, seed=None, C=np.inf, classifier=
     clf.fit(X_train_centered, y_train)
     acc = clf.score(X_test_centered, y_test)
     
-    # Pooled within-class covariance
     cov_0 = np.cov(X_train_centered[:K], rowvar=False, bias=True)
     cov_1 = np.cov(X_train_centered[K:], rowvar=False, bias=True)
     cov_pooled = 0.5 * (cov_0 + cov_1)
     
-    # Effective rank
     erank = calculate_effective_rank(cov_pooled)
     
     return acc, erank
 
 def run_experiment(name, X, y, class_a, class_b, Ks, test_size, n_trials=50, pca_dims=50, C=np.inf, classifier='logistic'):
-    """
-    Run full K-sweep for one dataset and one class pair.
-    Returns list of dicts with K, mean_acc, std_acc, mean_erank, S.
-    """
-    # Filter and relabel
     mask = (y == class_a) | (y == class_b)
     X_pair = X[mask].astype(np.float64)
     y_pair = y[mask]
     y_pair = np.where(y_pair == class_a, 0, 1)
     
-    # Preprocessing
     if pca_dims is not None:
         scaler = StandardScaler()
         X_pair = scaler.fit_transform(X_pair)
@@ -125,12 +110,10 @@ def run_experiment(name, X, y, class_a, class_b, Ks, test_size, n_trials=50, pca
     return results
 
 def save_results(results_dict, filepath):
-    """Save results dictionary to a JSON file."""
     with open(filepath, 'w') as f:
         json.dump(results_dict, f, indent=4)
 
 def load_results(filepath):
-    """Load results dictionary from a JSON file."""
     if os.path.exists(filepath):
         with open(filepath, 'r') as f:
             return json.load(f)

@@ -1,0 +1,85 @@
+\begin{table}[t]
+  \centering
+  \caption{Per-task summary for all 17 binary tasks.
+    $\erank_\infty$: asymptotic effective rank at $K = K_{\max}$.
+    $A_\infty$: peak accuracy.
+    $K_{\mathrm{sat}}$: first $K$ with $\calS(K) \leq 0.02$ (deep-saturation);
+    ``---'' means $\calS$ did not cross $0.02$ within the sweep.
+    $\rho$: within-task Spearman correlation between $\calS(K)$ and
+    $\Delta A(K) = A(2K) - A(K)$ (doubling-pair marginal), with
+    significance: ${}^\dagger\!p < 0.05$,
+    ${}^{\dagger\dagger}\!p < 0.01$,
+    ${}^{\dagger\dagger\dagger}\!p < 0.001$.}
+  \label{tab:pertask}
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{llrrrr}
+    \toprule
+    Dataset & Task & $\erank_\infty$ & $A_\infty$ & $K_{\mathrm{sat}}$ & $\rho$ \\
+    \midrule
+    MNIST        & 0v1            & 32.4 & 0.997 &  2048 & $0.882^{{\dagger\dagger\dagger}}$ \\
+                 & 3v8            & 37.5 & 0.965 &  2048 & $0.854^{{\dagger\dagger\dagger}}$ \\
+                 & 4v9            & 35.6 & 0.957 &  2048 & $0.925^{{\dagger\dagger\dagger}}$ \\
+                 & 1v7            & 34.5 & 0.993 &  2048 & $0.611^{{\dagger}}$ \\
+                 & 2v7            & 37.8 & 0.984 &  2048 & $0.589^{{\dagger}}$ \\
+                 & 4v7            & 36.8 & 0.985 &  2048 & $0.818^{{\dagger\dagger\dagger}}$ \\
+                 & 5v8            & 36.2 & 0.950 &  2048 & $0.854^{{\dagger\dagger\dagger}}$ \\
+    \midrule
+    Fashion-MNIST & 0v1            & 20.7 & 0.986 &  1024 & $0.821^{{\dagger\dagger\dagger}}$ \\
+                 & 2v6            & 14.5 & 0.835 &  1024 & $0.811^{{\dagger\dagger\dagger}}$ \\
+                 & 3v5            & 27.4 & 0.998 &  2048 & $0.893^{{\dagger\dagger\dagger}}$ \\
+                 & 4v6            & 15.7 & 0.857 &  1024 & $0.829^{{\dagger\dagger\dagger}}$ \\
+                 & 5v7            & 26.1 & 0.944 &  2048 & $0.857^{{\dagger\dagger\dagger}}$ \\
+    \midrule
+    Kuzushiji    & 0v1            & 37.2 & 0.987 &  2048 & $0.835^{{\dagger\dagger\dagger}}$ \\
+    \midrule
+    USPS         & 1v2            & 15.1 & 0.997 &   --- & $0.937^{{\dagger\dagger\dagger}}$ \\
+    \midrule
+    Breast Ca.   & benign vs. mal. & 8.2 & 0.945 &   --- & $0.717^{{\dagger}}$ \\
+    \midrule
+    CIFAR-10     & 0v1            & 15.4 & 0.808 &  1024 & $0.279$ \\
+                 & 3v5            & 17.2 & 0.597 &  1024 & $-0.550^{{\dagger}}$ \\
+    \midrule
+    \multicolumn{5}{l}{\textit{Summary}} & \textit{Median $0.829$} \\
+    \multicolumn{5}{l}{\textit{Pooled $\rho = 0.582$ ($p=9.6e-24$)}} \\
+    \multicolumn{5}{l}{\textit{16/17 positive}} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \caption{Per-task within-task Spearman $\rho$ for CLIP ViT-B/32
+    and ViT-L/14 across all 14 binary tasks, computed as in
+    Table~\ref{tab:pertask}. All 14/14 tasks are positive under
+    both backbones.}
+  \label{tab:clip_pertask}
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{llrrrr}
+    \toprule
+    & & \multicolumn{2}{c}{ViT-B/32} & \multicolumn{2}{c}{ViT-L/14} \\
+    Dataset & Task & $\rho$ & $p$ & $\rho$ & $p$ \\
+    \midrule
+    CIFAR-10     & 3v5            & $0.554^{{\dagger}}$ & $0.032$ & $0.838^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    CIFAR-10     & 0v1            & $0.850^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.881^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    \midrule
+    MNIST        & 0v1            & $0.914^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.986^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    MNIST        & 3v8            & $0.829^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.696^{{\dagger\dagger}}$ & $0.004$ \\
+    MNIST        & 4v9            & $0.968^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.936^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    MNIST        & 1v7            & $0.911^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.971^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    MNIST        & 2v7            & $0.968^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.961^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    MNIST        & 4v7            & $0.971^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.961^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    MNIST        & 5v8            & $0.957^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.968^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    \midrule
+    Fashion-MNIST & 0v1            & $0.943^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.950^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    Fashion-MNIST & 2v6            & $0.804^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.825^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    Fashion-MNIST & 3v5            & $0.887^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.935^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    Fashion-MNIST & 4v6            & $0.889^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.750^{{\dagger\dagger}}$ & $0.001$ \\
+    Fashion-MNIST & 5v7            & $0.907^{{\dagger\dagger\dagger}}$ & $<0.001$ & $0.961^{{\dagger\dagger\dagger}}$ & $<0.001$ \\
+    \midrule
+    \multicolumn{2}{l}{\textit{Median $\rho$}}  & \multicolumn{2}{c}{\textit{0.909}} & \multicolumn{2}{c}{\textit{0.943}} \\
+    \multicolumn{2}{l}{\textit{Significant at $p<0.05$}} & \multicolumn{2}{c}{\textit{14/14}} & \multicolumn{2}{c}{\textit{14/14}} \\
+    \bottomrule
+  \end{tabular}
+\end{table}

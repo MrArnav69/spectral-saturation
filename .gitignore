@@ -2,16 +2,19 @@
 Spectral Saturation*.pdf
 *.pdf
 
+# Pre-refactor code (replaced by analyses/ and src/)
+archive/
+
 # Data files (large, download separately)
 data/*.npz
 data/*.csv
 data/*.arff
 
-# Results cache (regenerate by running notebooks)
+# Results cache (regenerate by running scripts in analyses/)
 results/*.json
 results/*.npz
 
-# Figures (regenerate by running notebooks)
+# Figures (regenerate by running scripts in analyses/)
 figures/*.pdf
 figures/*.png
 figures/*.svg

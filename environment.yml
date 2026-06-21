@@ -14,3 +14,6 @@ dependencies:
       - jupyter
       - ipykernel
       - tensorflow==2.21.0   # only needed for CIFAR-10 loading
+      - torch>=2.3.0           # required by open-clip-torch; MPS supported natively on Apple Silicon
+      - torchvision>=0.18.0    # image preprocessing utils
+      - open-clip-torch>=2.24.0 # CLIP ViT-B/32 and ViT-L/14 inference

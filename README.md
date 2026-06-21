@@ -1,240 +1,299 @@
 # Spectral Saturation in Few-Shot Linear Classification
 
-This repository provides the complete implementation and reproducibility package for the study of **spectral saturation** in low-data binary classification regimes. The codebase supports all experiments, ablation studies, and publication-quality figures reported in the associated work.
+Reproducibility package for the study of **spectral saturation** in
+low-data binary classification regimes. The repository contains every
+experiment, statistical analysis, and publication-quality figure
+reported in the manuscript.
 
 ---
 
 ## Overview
 
-The central object of study is the **effective rank** of the pooled within-class sample covariance matrix, $\widehat{\Sigma}_W(K)$, as a function of the number of labeled examples per class $K$. The effective rank is defined as the exponential Shannon entropy of the normalized eigenvalue spectrum:
+The central object of study is the **effective rank** of the pooled
+within-class sample covariance matrix $\widehat{\Sigma}_W(K)$ as a
+function of the number of labeled examples per class $K$. The effective
+rank is defined as the exponential Shannon entropy of the normalised
+eigenvalue spectrum of the spectrum:
 
-$$\operatorname{erank}(\Sigma) = \exp\!\left(-\sum_i p_i \log p_i\right), \quad p_i = \frac{\lambda_i}{\sum_j \lambda_j}$$
+$$
+\operatorname{erank}(\Sigma) = \exp\!\left(-\sum_i p_i \log p_i\right),
+\qquad p_i = \frac{\lambda_i}{\sum_j \lambda_j}.
+$$
 
-The **saturation index** $S(K) = \operatorname{erank}(\widehat{\Sigma}_W(K)) / K$ is the primary diagnostic quantity. It serves as a label-free, classifier-free predictor of marginal accuracy gain for a linear classifier trained on the support set $\mathcal{S}_K$.
+The **saturation index** $S(K) = \operatorname{erank}\!\left(\widehat{\Sigma}_W(K)\right) / K$
+is the label-free, classifier-free diagnostic that the paper studies.
+It predicts when adding more support samples stops converting into
+classification accuracy.
 
-### Experimental Scope
+### Experimental scope
 
-Experiments are conducted over **17 binary classification tasks** spanning **6 datasets** and **2 data modalities** (image and tabular). Shot counts are swept over a geometric grid
+The headline result is computed over **31 binary classification tasks**
+drawn from 6 datasets and 2 data modalities (image and tabular), with
+5 additional **N-way (N=5)** tasks to extend the diagnostic beyond the
+binary setting. Shot counts are swept over a geometric K-grid
 
-$$K \in \{2,\, 3,\, 4,\, 6,\, 8,\, 12,\, 16,\, 24,\, 32,\, 48,\, 64,\, 128,\, 256,\, 512,\, 1024,\, 2048,\, 4096\}$$
+$$
+K \in \{2,\, 3,\, 4,\, 6,\, 8,\, 12,\, 16,\, 24,\, 32,\, 48,\, 64,\, 128,\, 256,\, 512,\, 1024,\, 2048,\, 4096\}.
+$$
 
-with $T = 50$ independent random trials per $(K, \text{task})$ pair ($T = 100$ for the tabular dataset). All datasets are publicly available and are fetched automatically from OpenML or `scikit-learn` if not present locally.
+All trials are independent with fixed seed per cell: $T = 50$ for the
+image tasks, $T = 50$ with a smaller grid for the tabular task.
+OpenCLIP features are encoded once per (dataset, backbone) and cached
+on disk; CLIP dimensionality is $512$ (ViT-B/32) or $768$ (ViT-L/14).
 
-| Dataset | Source | Original Dim. $d_0$ | Tasks | $K_{\max}$ |
+| Dataset | Source | Original dim. $d_0$ | Binary pairs | N-way |
 |---|---|---|---|---|
-| MNIST | OpenML | 784 | 0v1, 1v7, 2v7, 3v8, 4v7, 4v9, 5v8 | 4096 |
-| Fashion-MNIST | OpenML | 784 | 0v1, 2v6, 3v5, 4v6, 5v7 | 4096 |
-| Kuzushiji-MNIST | OpenML | 784 | 0v1 | 4096 |
-| USPS | OpenML | 256 | 1v2 | 512 |
-| CIFAR-10 | Keras | 3072 | 0v1, 3v5 | 4096 |
-| Breast Cancer Wisconsin | sklearn | 30 | malignant vs. benign | 100 |
+| MNIST | OpenML | 784 | 11 (original 7 + 4 extras) | 2 |
+| Fashion-MNIST | OpenML | 784 | 8 (original 5 + 3 extras) | 2 |
+| Kuzushiji-MNIST | OpenML | 784 | 3 (original 1 + 2 extras) | — |
+| USPS | OpenML | 256 | 2 | — |
+| CIFAR-10 | Keras | 3072 | 6 (original 2 + 4 extras) | 1 |
+| Breast Cancer Wisconsin | sklearn | 30 | 1 (benign vs. malignant) | — |
 
 ---
 
-## Repository Structure
+## Repository structure
 
 ```
 spectral-saturation/
-├── README.md                        # This file
-├── environment.yml                  # Conda environment specification
-├── run_all.py                       # End-to-end pipeline script
-├── .gitignore
+├── README.md                # this file
+├── LICENSE                  # MIT license
+├── pyproject.toml           # pip-installable metadata
+├── environment.yml          # conda specification (alternative install)
+├── Makefile                 # one-line targets (install / data / results / figures)
+├── run_all_experiments.py   # orchestrator — runs every analysis driver
 │
-├── data/                            # Cached dataset files (auto-populated)
-│   ├── mnist.npz
-│   ├── fashion_mnist.npz
-│   ├── kuzushiji.npz
-│   ├── usps.npz
-│   └── breast_cancer.npz
+├── src/                     # core library (importable, no side effects)
+│   ├── saturation.py        # effective rank, saturation index S(K)
+│   ├── geometry.py          # stable rank, TwoNN (Facco 2017), MLE (Levina-Bickel 2004)
+│   ├── datasets.py          # dataset loaders (mnist / fashion / kuzushiji / usps / cifar / breast_cancer)
+│   ├── clip_features.py     # OpenCLIP encoding with on-disk caching
+│   ├── protocols.py         # K-sweep machinery: sample_and_evaluate, run_binary_sweep, run_nway_sweep
+│   ├── statistics.py        # pooled ρ, K_sat, decoupling, DeLong AUC, cluster bootstrap
+│   ├── tau_transfer.py      # leave-one-representation-out CV on τ
+│   ├── active_learning.py   # random / uncertainty / uncertainty-gated-by-S
+│   └── figures.py           # matplotlib emitters for the paper figures
 │
-├── src/                             # Core library modules
-│   ├── __init__.py
-│   ├── metrics.py                   # Effective rank and saturation index (erank, S(K))
-│   ├── datasets.py                  # Dataset loaders — local .npz and OpenML fallback
-│   ├── experiment.py                # K-sweep runner, sample-and-evaluate, result I/O
-│   └── visualization.py             # Publication-ready figure generation
+├── analyses/                # single-purpose drivers — one JSON output per file
+│   ├── _shared.py           # K-grids, dataset resolution, CLIP image reshape
+│   ├── pca_sweeps.py        # all 31 PCA-binary + 5 PCA-N-way tasks
+│   ├── clip_sweeps.py       # CLIP-binary (B/32 + L/14) + 5 CLIP-N-way
+│   ├── clip_dense.py        # densified 23-element K-grid for B/32 vs L/14
+│   ├── ablations.py         # PCA-dim, regularisation, classifier-agnosticity
+│   ├── multistat.py         # S(erank) vs S(stable_rank) vs S(TwoNN) vs S(MLE)
+│   ├── tau_transfer.py      # LODO CV on the saturation threshold τ
+│   └── active_learning.py   # active-learning strategy comparison
 │
-├── notebooks/                       # Narrative Jupyter notebooks
-│   ├── 01_experiments.ipynb         # K-sweep across all datasets; saves all_results.json
-│   ├── 02_statistics.ipynb          # Wilcoxon, Spearman, and Pearson significance tests
-│   └── 03_ablations.ipynb           # PCA target dimension and regularization ablations
-│
-├── results/                         # Cached JSON experiment outputs
-│   ├── all_results.json
-│   ├── ablation_pca_results.json
-│   └── ablation_reg_results.json
-│
-└── figures/                         # Generated figures (populated by run_all.py)
-    ├── all_sweeps.png               # Accuracy and erank grid across all tasks
-    ├── decoupling.png               # erank∞ vs. peak accuracy scatter
-    ├── saturation_vs_marginal.png   # S(K) vs. marginal accuracy gain ΔA(K)
-    ├── pca_ablation.png             # Sensitivity to PCA target dimension d
-    ├── reg_ablation.png             # Sensitivity to logistic regularization C
-    └── classifier_comparison.png    # Classifier-agnostic verification
+├── data/                    # cached datasets and CLIP embeddings (gitignored)
+├── results/                 # canonical result artefacts (gitignored)
+└── figures/                 # emitted figures (gitignored)
 ```
+
+A separate `archive/` directory holds pre-refactor code and the
+original exploratory notebook. It is gitignored — pre-refactor code is
+preserved for traceability but not user-facing.
 
 ---
 
-## Environment Setup
+## Installation
 
-### Requirements
-
-The project targets **Python 3.13**. All dependencies are pinned in `environment.yml`:
-
-| Package | Version | Role |
-|---|---|---|
-| `numpy` | 2.4.6 | Numerical computation |
-| `scikit-learn` | 1.9.0 | Classifiers, PCA, StandardScaler, datasets |
-| `scipy` | 1.17.1 | Statistical tests (Wilcoxon, Spearman, Pearson) |
-| `matplotlib` | 3.10.9 | Figure generation |
-| `pandas` | 3.0.3 | Result aggregation |
-| `tensorflow` | 2.21.0 | CIFAR-10 loading only (via `keras.datasets`) |
-| `jupyter` / `ipykernel` | — | Notebook execution |
-
-### Installation
+### Option A — `pip` (minimal)
 
 ```bash
-# 1. Create and activate the Conda environment
+pip install -e .
+```
+
+The minimal install pulls in `numpy`, `scikit-learn`, `scipy`, and
+`pandas`. Add `matplotlib` for figure emission and `open-clip-torch`
+plus `torch` for the CLIP analyses.
+
+### Option B — `conda` (everything bundled)
+
+```bash
 conda env create -f environment.yml
 conda activate spectral-saturation
-
-# 2. Register the kernel with Jupyter
-python -m ipykernel install --user \
-    --name spectral-saturation \
-    --display-name "Python (spectral-saturation)"
 ```
 
-> **Note on TensorFlow.** TensorFlow is required only for CIFAR-10 loading (`keras.datasets.cifar10`). If TensorFlow installation fails on your platform, all non-CIFAR tasks remain fully functional; the pipeline degrades gracefully when CIFAR-10 is unavailable.
+`environment.yml` pins every dependency at versions tested on
+Apple Silicon (MPS path), including `tensorflow` (only used for
+CIFAR-10 loading) and `open-clip-torch`.
+
+> **CIFAR-10 fallback.** CIFAR-10 is loaded through `keras.datasets`
+> which requires TensorFlow. If TensorFlow is unavailable, every
+> non-CIFAR task still runs; the pipeline degrades gracefully and
+> notes skipped tasks in the log output.
+
+### Hardware
+
+All experiments in the manuscript were run on an Apple M3 Pro, 18 GB
+unified memory, macOS, MPS path. A single full pipeline run takes
+roughly 8–12 hours of wall-clock time depending on K-grid density. The
+on-disk cache eliminates redundant re-computation on re-run.
 
 ---
 
-## Reproducing Results
+## Reproducing every result
 
-Two fully equivalent pathways are provided. Both produce identical figures and statistical outputs.
-
-### Pathway 1 — Command-Line Execution
-
-Run the complete pipeline (dataset loading → K-sweeps → ablations → statistical tests → figure generation) with a single command:
+Run the orchestrator end-to-end:
 
 ```bash
-python run_all.py
+python run_all_experiments.py
 ```
 
-The script executes the following stages in order:
+It loads `data/` first, then runs every analyses driver in dependency
+order, then emits the manuscript figure set:
 
-| Stage | Description | Output |
+| Stage | Driver | Output(s) |
 |---|---|---|
-| 1 | Dataset loading | In-memory arrays |
-| 2 | K-sweep experiments (17 tasks, 50 trials each) | `results/all_results.json` |
-| 3 | PCA dimension ablation ($d \in \{20, 50, 100\}$) | `results/ablation_pca_results.json` |
-| 4 | Regularization ablation ($C \in \{\infty, 1.0, 0.1\}$) | `results/ablation_reg_results.json` |
-| 5 | Classifier-agnostic check (LR, Nearest Centroid, Linear SVM) | `results/ablation_classifier_results.json` |
-| 6 | Figure generation | `figures/*.png` |
+| 1 | `pca_sweeps`     | `all_31_results.json`, `nway_pca_results.json` |
+| 2 | `clip_sweeps`    | `clip_vitb32_binary_results.json`, `clip_vitl14_binary_results.json`, `nway_clip_results.json` |
+| 3 | `clip_dense`     | `clip_vitb32_dense_results.json`, `clip_vitl14_dense_results.json` |
+| 4 | `ablations`      | `ablation_pca_results.json`, `ablation_reg_results.json`, `ablation_classifier_results.json` |
+| 5 | `multistat`      | `multistat_results.json` |
+| 6 | `tau_transfer`   | `tau_transfer_report.json` |
+| 7 | `active_learning` | `active_learning_results.json` |
+| — | `src.figures`    | `figures/*.png` |
 
-**Smart caching.** Each stage checks for an existing result file before running. If the file is present, the cached results are loaded immediately and computation is skipped. This allows figures to be regenerated from cache in seconds.
-
-**Force full re-run.** To recompute everything from scratch:
+Or via the provided Makefile:
 
 ```bash
-rm results/*.json
-python run_all.py
+make install
+make data        # downloads datasets + CLIP features (cached)
+make results     # all 7 analysis stages
+make figures     # emit manuscript figures
+make all         # the full pipeline
 ```
 
-**Automatic dataset download.** If `.npz` files are absent from `data/`, the pipeline fetches them from OpenML and `scikit-learn` automatically and caches them for subsequent runs.
+### Running a single driver
+
+Every driver is a self-contained CLI. To rerun only the multistat
+analysis:
+
+```bash
+python -m analyses.multistat
+```
+
+Each driver checks for an existing output JSON before doing any work
+— re-invocation is a no-op when the cache file is present. Force a
+fresh run by deleting the relevant file first.
+
+### Skipping parts of the pipeline
+
+```bash
+python run_all_experiments.py --from 4       # resume from stage 4
+python run_all_experiments.py --to 5         # stop after stage 5
+python run_all_experiments.py --skip-figures # skip the matplotlib step
+```
 
 ---
 
-### Pathway 2 — Jupyter Notebooks
+## What every driver writes
 
-Open the notebooks sequentially in Jupyter Lab or Jupyter Notebook:
-
-```bash
-jupyter notebook
-```
-
-Navigate to the `notebooks/` directory and execute in order:
-
-#### [`01_experiments.ipynb`](notebooks/01_experiments.ipynb)
-Runs the K-sweep protocol across all 17 tasks. For each $(K, \text{task})$ pair:
-- Draws $T = 50$ random support sets $\mathcal{S}_K$
-- Applies the preprocessing pipeline (pixel normalization → StandardScaler → PCA to $d = 50$ → support centering; tabular datasets skip PCA)
-- Trains an unregularized logistic regression classifier on $\mathcal{S}_K$
-- Records test accuracy $A(K)$ and $\operatorname{erank}(\widehat{\Sigma}_W(K))$
-
-Saves results to `results/all_results.json`.
-
-#### [`02_statistics.ipynb`](notebooks/02_statistics.ipynb)
-Performs the three primary statistical analyses:
-- **Wilcoxon signed-rank test** — tests the hypothesis that $\Delta A(K) < 0$ in the deep-saturation sub-regime ($S(K) \leq 0.02$)
-- **Spearman correlation** — quantifies the monotone relationship between $S(K)$ and $\Delta A(K)$ within tasks
-- **Pearson correlation** — tests the decoupling hypothesis between asymptotic effective rank $\operatorname{erank}_\infty$ and peak classification accuracy $A_\infty$
-
-#### [`03_ablations.ipynb`](notebooks/03_ablations.ipynb)
-Assesses the robustness of the saturation signal:
-- **PCA dimension ablation**: sweeps $d \in \{20, 50, 100\}$ for image tasks and $d \in \{5, 10, 20\}$ for the tabular task
-- **Regularization ablation**: sweeps logistic regression inverse regularization strength $C \in \{\infty, 1.0, 0.1\}$ at each task's peak shot count $K_{\text{peak}}$
-
-> **Caching.** All notebooks load from pre-computed `results/*.json` files when available, enabling instant figure rendering without re-running experiments. Deleting the cache files triggers automatic recomputation.
-
----
-
-## Core API Reference
-
-### `src/metrics.py`
-
-```python
-calculate_effective_rank(cov_matrix: np.ndarray) -> float
-```
-Computes $\operatorname{erank}(\Sigma) = \exp(-\sum_i p_i \log p_i)$ from a symmetric positive semi-definite covariance matrix. Eigenvalues are clipped to $10^{-12}$ for numerical stability.
-
-```python
-saturation_ratio(erank: float, K: int) -> float
-```
-Returns the saturation index $S(K) = \operatorname{erank} / K$. Returns `0.0` for $K \leq 0$.
-
-### `src/experiment.py`
-
-```python
-run_experiment(tag, X, y, class_a, class_b, K_grid, test_size, n_trials, pca_dims) -> list[dict]
-```
-Executes the full K-sweep for a single binary task. Returns a list of result records, one per $(K, \text{trial})$ pair, each containing `K`, `mean_acc`, `std_acc`, `mean_erank`, and `mean_saturation`.
-
-```python
-sample_and_evaluate(X, y, K, test_size, seed, C, classifier) -> tuple[float, float]
-```
-Performs a single trial: draws a balanced support set of size $2K$, applies preprocessing, trains the specified classifier, and returns `(accuracy, erank)`.
-
-### `src/visualization.py`
-
-| Function | Output file | Description |
+| File | Content | Cached on |
 |---|---|---|
-| `plot_all_sweeps_grid` | `all_sweeps.png` | Grid of $A(K)$ and $\operatorname{erank}(K)$ curves per task |
-| `plot_decoupling_hypothesis` | `decoupling.png` | Scatter of $\operatorname{erank}_\infty$ vs. $A_\infty$ |
-| `plot_saturation_vs_marginal_gain` | `saturation_vs_marginal.png` | $S(K)$ vs. $\Delta A(K)$ with phase boundary annotations |
-| `plot_pca_ablation` | `pca_ablation.png` | $\operatorname{erank}(K)$ curves for $d \in \{20, 50, 100\}$ |
-| `plot_reg_ablation` | `reg_ablation.png` | Accuracy comparison across regularization strengths |
-| `plot_classifier_comparison` | `classifier_comparison.png` | Classifier-agnostic accuracy at saturation |
+| `results/all_31_results.json` | 31 binary PCA tasks, one row per `(K, trial)` | first run |
+| `results/nway_pca_results.json` | 5 PCA N-way tasks | first run |
+| `results/clip_vitb32_binary_results.json`   | 14 binary tasks, ViT-B/32 | first run |
+| `results/clip_vitl14_binary_results.json`   | 14 binary tasks, ViT-L/14 | first run |
+| `results/nway_clip_results.json`            | 5 N-way tasks, ViT-B/32 | first run |
+| `results/clip_vitb32_dense_results.json`    | densified 23-element K-grid for B/32 | first run |
+| `results/clip_vitl14_dense_results.json`    | densified 23-element K-grid for L/14 | first run |
+| `results/ablation_pca_results.json`         | PCA-dim sweep | first run |
+| `results/ablation_reg_results.json`         | regularisation C sweep | first run |
+| `results/ablation_classifier_results.json`  | three classifiers at K_peak | first run |
+| `results/multistat_results.json`            | S(erank) vs S(stable_rank) vs S(TwoNN) vs S(MLE) | first run |
+| `results/tau_transfer_report.json`          | LODO CV report on τ | first run |
+| `results/active_learning_results.json`      | active-learning strategy comparison | first run |
+
+All of these are gitignored; they are recomputed deterministically by
+the appropriate driver.
 
 ---
 
-## Preprocessing Pipeline
+## Preprocessing protocol
 
-All preprocessing is fitted **exclusively on the support set** $\mathcal{S}_K$ to prevent test-set leakage. The same fitted transformations are applied to the held-out test set at evaluation time.
+Every preprocessing step is fitted **exclusively on the support set**
+$\mathcal{S}_K$ to prevent test-set leakage. The fitted
+transformations are then applied to the held-out test set at
+evaluation time.
 
 **Image datasets** (MNIST, Fashion-MNIST, Kuzushiji-MNIST, USPS, CIFAR-10):
-1. Pixel normalization: $x \leftarrow x / 255$
-2. Feature standardization: `StandardScaler` fitted on $\mathcal{S}_K$
-3. PCA to $d = 50$ components, fitted on standardized $\mathcal{S}_K$
-4. Support centering: subtract the support mean in the PCA-reduced space
 
-**Tabular dataset** (Breast Cancer Wisconsin, $d_0 = 30$):
-1. Feature standardization: `StandardScaler` fitted on $\mathcal{S}_K$
-2. Support centering: subtract the support mean
+1. Pixel normalisation to $[0, 1]$.
+2. Standard scaling, fit on $\mathcal{S}_K$.
+3. PCA to $d = 50$, fit on the standardised $\mathcal{S}_K$.
+4. Subtract the support mean in the PCA-reduced space.
 
-PCA is not applied to the tabular dataset as $d_0 = 30 < d = 50$.
+**Tabular dataset** (Breast Cancer Wisconsin, $d_0 = 30$): no PCA (raw
+dimension is already below 50).
+
+**OpenCLIP features** are kept in their native $512$- or $768$-dim
+space — the protocol tests the saturation diagnostic in the raw
+embedding space, not after a downstream PCA.
+
+---
+
+## Core API
+
+The library is importable from anywhere inside the project:
+
+```python
+from src.saturation import effective_rank, saturation_index
+from src.protocols import run_binary_sweep, run_nway_sweep
+from src.statistics import (
+    pooled_spearman,
+    per_task_spearman,
+    per_task_table,
+    decoupling_corr,
+    decoupling_ci,
+    cluster_bootstrap_pooled_rho,
+    binary_stopping_auc,
+    multistat_summary_table,
+)
+from src.geometry import (
+    effective_rank as effective_rank_negclip,
+    stable_rank,
+    two_nn_intrinsic_dim,
+    mle_intrinsic_dim,
+)
+from src.tau_transfer import build_dataset, leave_one_rep_out_cv
+from src.active_learning import run_task_experiment
+from src.figures import (
+    plot_single_experiment,
+    plot_all_sweeps_grid,
+    plot_decoupling_hypothesis,
+    plot_clip_vs_pca_comparison,
+    plot_nway_saturation,
+    plot_pca_ablation,
+    plot_reg_ablation,
+    plot_classifier_comparison,
+    plot_backbone_comparison,
+)
+```
+
+---
+
+## Citation
+
+If you use this code or the saturation diagnostic in your work,
+please cite the associated manuscript (forthcoming).
+
+```
+Gupta, A. Spectral saturation in few-shot linear classification.
+Manuscript, 2026.
+```
 
 ---
 
 ## License
 
-This repository is released for research and reproducibility purposes. See `LICENSE` for details.
+Released under the MIT License — see `LICENSE` for details.
+
+---
+
+## Acknowledgements
+
+Datasets: MNIST (LeCun & Cortes), Fashion-MNIST (Xiao et al. 2017),
+Kuzushiji-MNIST (Clanuwat et al. 2018), USPS (Hull 1994), CIFAR-10
+(Krizhevsky 2009), Breast Cancer Wisconsin (Street et al. 1993). CLIP
+features via OpenCLIP (Cherti et al. 2022).

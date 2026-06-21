@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spectral-saturation"
+version = "1.0.0"
+description = "Spectral saturation as a label-free diagnostic for few-shot classification budgets."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Arnav Gupta", email = "arnav.gupta.ai@outlook.com" },
+]
+requires-python = ">=3.10"
+keywords = [
+    "few-shot learning",
+    "effective rank",
+    "linear probing",
+    "saturation diagnostic",
+    "CLIP",
+]
+
+# Runtime deps are intentionally minimal.  CLIP / CIFAR-10 are
+# well-served by their existing ecosystems (CLIP via open-clip-torch,
+# CIFAR-10 via keras/tensorflow) and pulled in by the conda env; the
+# pyproject install extracts everything you need to reproduce the PCA
+# half of the manuscript.
+dependencies = [
+    "numpy>=1.26",
+    "scikit-learn>=1.4",
+    "scipy>=1.12",
+    "pandas>=2.1",
+]
+
+[project.optional-dependencies]
+figures = ["matplotlib>=3.8"]
+clip     = ["torch>=2.3", "open-clip-torch>=2.24"]
+cifar    = ["tensorflow>=2.15"]
+all      = [
+    "matplotlib>=3.8",
+    "torch>=2.3",
+    "open-clip-torch>=2.24",
+    "tensorflow>=2.15",
+]
+
+[project.urls]
+Paper       = "https://example.org/spectral-saturation"
+Repository  = "https://example.org/spectral-saturation-src"
+
+[tool.setuptools]
+packages = ["src", "analyses"]

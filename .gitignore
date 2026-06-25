@@ -10,14 +10,9 @@ data/*.npz
 data/*.csv
 data/*.arff
 
-# Results cache (regenerate by running scripts in analyses/)
-results/*.json
+
 results/*.npz
 
-# Figures (regenerate by running scripts in analyses/)
-figures/*.pdf
-figures/*.png
-figures/*.svg
 
 # Python
 __pycache__/
